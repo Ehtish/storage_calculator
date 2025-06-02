@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Storage Days Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+      background-color: #f4f4f4;
+    }
+
+    .container {
+      max-width: 400px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    label {
+      display: block;
+      margin: 15px 0 5px;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      box-sizing: border-box;
+      margin-bottom: 10px;
+    }
+
+    #result {
+      background-color: #eef;
+      padding: 15px;
+      border-radius: 5px;
+      margin-top: 20px;
+      display: none;
+    }
+
+    .result-field {
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Storage Days Calculator</h2>
+
+    <label for="cargoType">Cargo Type</label>
+    <select id="cargoType">
+      <option value="General Cargo">General Cargo</option>
+      <option value="DG Cargo">DG Cargo</option>
+    </select>
+
+    <label for="fromDate">From Date</label>
+    <input type="date" id="fromDate">
+
+    <label for="toDate">To Date</label>
+    <input type="date" id="toDate">
+
+    <label for="cbm">CBM (Cubic Meters)</label>
+    <input type="number" id="cbm" step="0.01" min="0">
+
+    <button onclick="calculate()">Calculate</button>
+
+    <div id="result">
+      <div class="result-field">Total Days: <span id="totalDays"></span></div>
+      <div class="result-field">Total Amount: <span id="totalAmount"></span></div>
+    </div>
+  </div>
+
+  <script>
+    function calculate() {
+      const cargoType = document.getElementById('cargoType').value;
+      const fromDate = new Date(document.getElementById('fromDate').value);
+      const toDate = new Date(document.getElementById('toDate').value);
+      const cbm = parseFloat(document.getElementById('cbm').value);
+
+      if (isNaN(fromDate) || isNaN(toDate) || isNaN(cbm) || cbm <= 0) {
+        alert("Please enter valid inputs.");
+        return;
+      }
+
+      const diffTime = toDate - fromDate;
+      let totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+      if (totalDays <= 0) {
+        alert("To Date must be after From Date.");
+        return;
+      }
+
+      const generalRates = [
+        { days: 5, rate: 425 },
+        { days: 5, rate: 475 },
+        { days: 5, rate: 525 },
+        { days: 5, rate: 575 },
+        { days: 10, rate: 625 },
+        { days: Infinity, rate: 675 }
+      ];
+
+      const dgRates = [
+        { days: 5, rate: 475 },
+        { days: 5, rate: 525 },
+        { days: 5, rate: 575 },
+        { days: 8, rate: 625 },
+        { days: Infinity, rate: 675 }
+      ];
+
+      const rateTable = cargoType === 'DG Cargo' ? dgRates : generalRates;
+
+      let remainingDays = totalDays;
+      let totalAmount = 0;
+
+      for (let i = 0; i < rateTable.length && remainingDays > 0; i++) {
+        const slabDays = Math.min(rateTable[i].days, remainingDays);
+        totalAmount += slabDays * rateTable[i].rate;
+        remainingDays -= slabDays;
+      }
+
+      totalAmount = totalAmount * cbm;
+
+      document.getElementById('totalDays').innerText = totalDays;
+      document.getElementById('totalAmount').innerText = `$${totalAmount.toFixed(2)}`;
+      document.getElementById('result').style.display = 'block';
+    }
+  </script>
+</body>
+</html>
